@@ -89,7 +89,19 @@ where
     let mut file = File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    let keystore: EthKeystore = serde_json::from_str(&contents)?;
+
+    decrypt_key_with_str(&contents, password)
+}
+
+
+/// Decrypts an encrypted JSON keystore with the provided string `contents` using the provided `password`.
+/// Decryption supports the [Scrypt](https://tools.ietf.org/html/rfc7914.html) and
+/// [PBKDF2](https://ietf.org/rfc/rfc2898.txt) key derivation functions.
+pub fn decrypt_key_with_str<S>(contents: &str, password: S) -> Result<Vec<u8>, KeystoreError>
+where
+    S: AsRef<[u8]>,
+{
+    let keystore: EthKeystore = serde_json::from_str(contents)?;
 
     // Derive the key.
     let key = match keystore.crypto.kdfparams {
